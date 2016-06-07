@@ -56,3 +56,4 @@ function search_config_install()  {
       $settings = search_config_node_settings();
       \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
     }
+    
