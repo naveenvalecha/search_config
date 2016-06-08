@@ -218,3 +218,23 @@ function search_config_node_search_result($node) {
     }
   }
 }
+
+/**
+ * Implements of hook_form_FORM_alter().
+ */
+function search_config_form_search_form_alter(&$form, $form_state) {
+  // Update the node search form.
+  if (isset($form['module']['#value']) && $form['module']['#value'] == 'node') {
+    module_load_include('inc', 'search_config', 'search_config.node');
+    _search_config_set_string_overrides($form, $form_state);
+    if (isset($form['advanced'])) {
+      $settings = search_config_node_settings();
+      if (!empty($settings['restrictions']['remove_advanced'])) {
+        $form['advanced']['#access'] = FALSE;
+      }
+      else {
+        _search_config_advanced_form($form, $form_state);
+      }
+    }
+  }
+}
