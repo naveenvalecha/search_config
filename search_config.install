@@ -55,5 +55,15 @@ function search_config_install()  {
       $insert->execute();
       $settings = search_config_node_settings();
       \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
+
+      // Remove the old 6.x variables
+      \Drupal::config('search_config.settings')->clear('search_config_disable_or')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_phrase')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_negative')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_category_all')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_category')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_type')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_index_type')->save();
+
     }
     
