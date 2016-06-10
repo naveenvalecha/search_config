@@ -304,3 +304,79 @@ function search_config_type_element_validate($element, &$form_state) {
   }
   $form_state->setValueForElement($element, $types);
 }
+
+/**
+ * Cloned from the search module to parse the query string.
+ */
+function _parse_search_expression($expression) {
+  $sections = array(
+    'negative' => array(),
+    'positive' => array(),
+    'options' => array()
+  );
+
+  // Pull out known option selectors
+  foreach (array('type', 'language', 'term') as $option) {
+    if (preg_match('/(^| )' . $option . ':([^ ]*)( |$)/i', $expression, $matches)) {
+      $sections['options'][$option] = $matches[2];
+      $expression = str_replace($matches[0], ' ', $expression);
+    }
+  }
+
+  // Matchs words optionally prefixed by a dash. A word in this case is
+  // something between two spaces, optionally quoted.
+  preg_match_all('/ (-?)("[^"]+"|[^" ]+)/i', ' ' . $expression, $keywords, PREG_SET_ORDER);
+
+  if (!empty($keywords)) {
+    // Classify tokens.
+    $or = FALSE;
+    foreach ($keywords as $match) {
+      $phrase = FALSE;
+      // Strip off phrase quotes.
+      if ($match[2]{0} == '"') {
+        $match[2] = substr($match[2], 1, -1);
+        $phrase = TRUE;
+      }
+      // Simplify keyword according to indexing rules and external
+      // preprocessors. Use same process as during search indexing, so it
+      // will match search index.
+      $words = search_simplify($match[2]);
+      // Re-explode in case simplification added more words, except when
+      // matching a phrase.
+      $words = $phrase ? array($words) : preg_split('/ /', $words, -1, PREG_SPLIT_NO_EMPTY);
+      // Negative matches.
+      if ($match[1] == '-') {
+        $sections['negative'] = array_merge($sections['negative'], $words);
+      }
+      // OR operator: instead of a single keyword, we store an array of all
+      // OR'd keywords.
+      elseif ($match[2] == 'OR' && count($sections['positive'])) {
+        $last = array_pop($sections['positive']);
+        // Starting a new OR?
+        if (!is_array($last)) {
+          $last = array($last);
+        }
+        $sections['positive'][] = $last;
+        $or = TRUE;
+        continue;
+      }
+      // AND operator: implied, so just ignore it.
+      elseif ($match[2] == 'AND' || $match[2] == 'and') {
+        continue;
+      }
+
+      // Plain keyword.
+      else {
+        if ($or) {
+          // Add to last element (which is an array).
+          $sections['positive'][count($sections['positive']) - 1] = array_merge($sections['positive'][count($sections['positive']) - 1], $words);
+        }
+        else {
+          $sections['positive'] = array_merge($sections['positive'], $words);
+        }
+      }
+      $or = FALSE;
+    }
+  }
+  return $sections;
+}
