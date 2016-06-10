@@ -1,0 +1,70 @@
+<?php
+
+/*
+ *Implements hook_schema
+ */
+
+function search_config_schema() {
+  if (!db_table_exists('search_config_exclude'))  {
+    $schema['search_config_exclude'] = array(
+    'description' => 'Provides a way to exclude specific entities from the search results. Note that this does not stop the entities from being indexed.',
+    'fields' => array(
+      'entity_id' => array(
+        'description' => 'The node Id to exclude.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'entity_type' => array(
+        'description' => 'The entity type to exclude.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'exclude' => array(
+        'description' => 'Exclusion flag. Default 1: exclude from public searches.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+    ),
+    'primary key' => array('entity_id', 'entity_type'),
+  );
+  }  
+  return $schema;
+}
+
+/*
+ * Implements hook_install()
+ */
+function search_config_install()  {
+
+  module_load_include('module','serach_config');
+  $insert = db_insert('role_permission')->fields(array('rid', 'permission'));
+  foreach (array(\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE, \Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID) as $rid) {
+    if (!search_config_get_roles_by_permission($rid, 'search all content')) {
+          $insert->values(array(
+            'rid' => $rid,
+            'permission' => 'search all content',
+          ));
+        }
+      }
+      $insert->execute();
+      $settings = search_config_node_settings();
+      \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
+
+      // Remove the old 6.x variables
+      \Drupal::config('search_config.settings')->clear('search_config_disable_or')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_phrase')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_negative')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_category_all')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_category')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_type')->save();
+      \Drupal::config('search_config.settings')->clear('search_config_disable_index_type')->save();
+
+    }
+    
