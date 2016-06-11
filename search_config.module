@@ -321,3 +321,13 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
         \Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
     }
 }
+
+/*
+ * Implements hook_node_update()
+ */
+function search_config_node_update(\Drupal\node\NodeInterface $node) {
+    if (isset($node->search_config_exclude)) {
+        db_delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
+        search_config_node_insert($node);
+    }
+}
