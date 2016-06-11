@@ -307,3 +307,17 @@ function search_config_search_admin_settings_alter(&$form, &form_state) {
         }
     }
 }
+
+/**
+ * Implements hook_node_insert().
+ */
+function search_config_node_insert(\Drupal\node\NodeInterface $node) {
+    if (!empty($node->search_config_exclude)) {
+        $record = array(
+            'entity_type' => 'node',
+            'entity_id' => $node->id(),
+            'exclude' => 1,
+        );
+        \Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
+    }
+}
