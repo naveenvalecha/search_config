@@ -270,5 +270,40 @@ function search_config_form_search_admin_settings_alter(&$form, $form_state) {
  */
 function search_config_search_admin_settings_alter(&$form, &form_state) {
   \Drupal::configFactory()->getEditable('search_config.settings')->set('search_config_string_overrides', $form_state['values']['search_config_string_overrides'])->save();
-  \Drupal:configFactory()->getEditable('search_config.node_content_settings')->set('search_config', $form_state['values']['content_node_search_config']);
+  \Drupal::configFactory()->getEditable('search_config.node_content_settings')->set('search_config', $form_state['values']['content_node_search_config']);
+}
+
+/*
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+/**
+ * @param $form
+ * @param $form_state
+ */function search_config_form_node_form_alter(&$form, $form_state) {
+    if (!\Drupal::currentUser()->hasPermission('admin node search exlusions')) {
+        return;
+    }
+
+    $node = $form['#node'];
+    $default_value = 0;
+    if (!empty($node->nid)) {
+        $default_value = (int) db_query_range('SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type', 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
+    }
+    $element = array(
+        '#type' => 'checkbox',
+        '#title' => t('Exclude from search'),
+        '#default_value' => $default_value,
+    );
+
+    // Align with normal publishing options if possible.
+    if (\Drupal::currentUser()->hasPermission('administer nodes')) {
+        $form['options']['search_config_exclude'] = $element;
+    }
+    else {
+        $form['search_config_exclude'] = $element;
+        // Pushes the element to sit just above the vertical tabs.
+        if (!empty($form['additional_settings']['#weight'])) {
+            $form['search_config_exclude']['#weight'] = $form['additional_settings']['#weight'] - 1;
+        }
+    }
 }
