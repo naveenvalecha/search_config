@@ -241,12 +241,6 @@ function search_config_form_search_form_alter(&$form, $form_state) {
 
 /**
  * Helper function to test the users configured access rights to a field.
- *
- * @param bool $remove
- *   A flag to block access.
- *
- * @param array $grant
- *   An additional array of roles to overrule the main flag
  */
 function search_config_get_access($remove, $grant) {
   $user = \Drupal::currentUser();
