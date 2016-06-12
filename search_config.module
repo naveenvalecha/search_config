@@ -262,7 +262,7 @@ function search_config_form_search_admin_settings_alter(&$form, $form_state) {
 /**
  * Additional submit handler to save the additional fields added by the form alter.
  */
-function search_config_search_admin_settings_alter(&$form, &form_state) {
+function search_config_search_admin_settings_alter(&$form, &$form_state) {
   \Drupal::configFactory()->getEditable('search_config.settings')->set('search_config_string_overrides', $form_state['values']['search_config_string_overrides'])->save();
   \Drupal::configFactory()->getEditable('search_config.node_content_settings')->set('search_config', $form_state['values']['content_node_search_config']);
 }

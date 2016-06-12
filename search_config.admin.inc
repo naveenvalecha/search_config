@@ -4,8 +4,8 @@
  * @param $form
  * @param $form_state
  */
-function search_config_form_search_admin_settings_alter($form, $form_state) {
-    $string_overirdes = search_config_string_overrides();
+function _search_config_form_search_admin_settings_alter($form, $form_state) {
+    $string_overrides = search_config_string_overrides();
     $form['search_config_string_overrides'] = array(
         '#type' => 'fieldset',
         '#theme' => 'search_config_admin_label_form',
@@ -289,4 +289,78 @@ function search_config_form_search_admin_settings_alter($form, $form_state) {
       ),
     ),
   );
+}
+
+/**
+ * Element validate callback for groupings list.
+ *
+ * User friendly display of key|value listings element validation.
+ */
+function element_node_search_config_groupings_validate($element, &$form_state) {
+    $list = explode("\n", $element['#value']);
+    // Pre-tidy the options list.
+    $list = array_filter(array_map('trim', $list), 'strlen');
+
+    $values = array();
+    $content_types = search_config_content_types();
+    $found_types = array();
+    $errors = array();
+    $empty_pairs = array();
+    foreach ($list as $text) {
+        if (preg_match('/([a-z0-9_,\-<>]{1,})\|(.{1,})/', $text, $matches)) {
+            $key = trim($matches[1]);
+            $value = trim($matches[2]);
+            if (empty($key) || empty($value)) {
+                $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($matches[0]);
+            }
+            else {
+                $found_types = array();
+                $unknown_types = array();
+                $types = array_filter(array_map('trim', explode(',', $key)), 'strlen');
+
+                foreach ($types as $name) {
+                    if (isset($content_types[$name]) || $name == '<other-types>' || $name == '<all-types>') {
+                        $found_types[] = $name;
+                    }
+                    else {
+                        $unknown_types[] = $name;
+                    }
+                }
+                if (count($unknown_types)) {
+                    $errors[] = t('The key contains one or more invalid content types: %types [line: %line]',
+                        array('%types' => implode(', ', $unknown_types), '%line' => $matches[0]));
+                }
+                elseif (count($found_types)) {
+                    $values[implode(',', $found_types)] = $value;
+                }
+                else {
+                    $errors[] = t('No types could be found. [line: %line]',
+                        array('%line' => $matches[0]));
+                }
+            }
+        }
+        else {
+            $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($text);
+        }
+    }
+
+    if (!empty($empty_pairs)) {
+        $item_list = array(
+            '#type' => 'item_list',
+            '#items' => $empty_pairs,
+        );
+        $errors [] = t('Each line must contain a "type|value" pair. Types must contain one or more content type machine codes separated by commas and values must be non-empty strings. This error was seen on the following lines: !list',
+            array('!list' => \Drupal::service('renderer')->render($item_list)));
+    }
+    if (!empty($errors)) {
+        $item_list = array(
+            '#type' => 'item_list',
+            '#items' => $errors,
+        );
+        form_error($element, t('The following errors were detected in the group options: !list',
+            array('!list' => \Drupal::service('renderer')->render($item_list))));
+    }
+    else {
+        form_set_value($element, $values, $form_state);
+    }
 }
