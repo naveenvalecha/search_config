@@ -67,4 +67,11 @@ function search_config_install()  {
       \Drupal::config('search_config.settings')->clear('search_config_disable_index_type')->save();
 
     }
-    
+
+/**
+ * Implements hook_uninstall().
+ */
+function search_config_uninstall() {
+  \Drupal::service('config.factory')->getEditable('search_config.settings')->delete();
+  \Drupal::service('config.factory')->getEditable('search_config.node_content_settings')->delete();
+}
