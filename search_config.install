@@ -4,6 +4,9 @@
  *Implements hook_schema
  */
 
+/**
+ * @return mixed
+ */
 function search_config_schema() {
   if (!db_table_exists('search_config_exclude'))  {
     $schema['search_config_exclude'] = array(
@@ -34,7 +37,7 @@ function search_config_schema() {
     ),
     'primary key' => array('entity_id', 'entity_type'),
   );
-  }  
+  }
   return $schema;
 }
 
@@ -45,8 +48,8 @@ function search_config_install()  {
 
   module_load_include('module','serach_config');
   $insert = db_insert('role_permission')->fields(array('rid', 'permission'));
-  foreach (array(\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE, \Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID) as $rid) {
-    if (!search_config_get_roles_by_permission($rid, 'search all content')) {
+  foreach (array(\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE, \Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE) as $rid) {
+    if (!search_config_get_roles_by_permission($rid)) {
           $insert->values(array(
             'rid' => $rid,
             'permission' => 'search all content',
