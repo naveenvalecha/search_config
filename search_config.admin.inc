@@ -4,6 +4,7 @@
  * @param $form
  * @param $form_state
  */
+use Drupal\Core\Session\AccountInterface;
 function _search_config_form_search_admin_settings_alter($form, $form_state) {
     $string_overrides = search_config_string_overrides();
     $form['search_config_string_overrides'] = array(
@@ -215,9 +216,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
       }
   }
   $items = array();
-  $all_permissions = array(
-      \Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE => $roles[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE],
-      \Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE => $roles[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE],
+  $all_permissions = array(AccountInterface::ANONYMOUS_ROLE => $roles[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE], AccountInterface::AUTHENTICATED_ROLE => $roles[AccountInterface::AUTHENTICATED_ROLE],
   );
   $search_all = array();
   foreach ($permissions['search all content'] as $rid => $role) {
@@ -233,11 +232,11 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
       $permission = $search_all + $permission;
       if (count($permission)) {
           // We can reduce this down to just the two roles.
-          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE])) {
+          if (isset($permission[AccountInterface::AUTHENTICATED_ROLE])) {
               $permission = array_intersect_key($all_permissions, $permission);
           }
 
-          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE]) && isset($permission[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE])) {
+          if (isset($permission[AccountInterface::AUTHENTICATED_ROLE]) && isset($permission[AccountInterface::ANONYMOUS_ROLE])) {
               $items[] = t('!permission<br /><strong><em>Everyone</em></strong>', $t_args);
           }
           else {
