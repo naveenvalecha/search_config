@@ -66,11 +66,11 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
         '#tree' => TRUE,
         '#title' => t('Additional Node Search Configuration'),
         '#collapsed' => \Drupal::config('search_config.node')->get('search_config'),
-        '#collapsible' => TRUE;
-        'info' => [
+        '#collapsible' => TRUE,
+        'info' => array(
             '#markup' => t('<p>The basic search form is the keyword and search button that is shown to all users. The additional fields are all part of the advanced search form that is only shown to users that have the "%advsearch" permission. <em>This module does not override these permissions!</em></p>',
                 ['%usesearch' => t('Use search'), '%advsearch' => t('Use advanced search')]),
-        ],
+        ),
         'forms' => array(
             '#type' => 'item',
             '#title' => t('Form control'),
@@ -166,7 +166,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
               '#type' => 'item_list',
               '#items' => $groupings_type_help_items,
           );
-          $groupings_type_help . = \Drupal::service('renderer')->render($item_list);
+          $groupings_type_help .= \Drupal::service('renderer')->render($item_list);
           $groupings_type_help .= t('<p>Leave empty to use the standard type options.</p>');
       $form['content_node_search_config']['fields'][$key] += array(
           'filter' => array(
@@ -285,7 +285,8 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
 
                   ); \Drupal::service('renderer')->render($item_list);)
                 . t('<p><strong><sup>*</sup></strong>Note: These users are allowed to search all content items.</p><p>To update these, edit the %module module <a href="!url">permissions</a>.</p>',
-        array('%module' => t('Search configuration'), '!url' => url('admin/people/permissions', array('fragment' => 'module-search_config')))),
+        array('%module' => t('Search configuration'), '!url' => url('admin/people/permissions', array('fragment' => 'module-search_config'))))
+        ,
       ),
     ),
   );
@@ -296,7 +297,13 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
  *
  * User friendly display of key|value listings element validation.
  */
-function element_node_search_config_groupings_validate($element, &$form_state) {
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * @param $element
+ * @param FormStateInterface $form_state
+ */
+function element_node_search_config_groupings_validate($element, FormStateInterface &$form_state) {
     $list = explode("\n", $element['#value']);
     // Pre-tidy the options list.
     $list = array_filter(array_map('trim', $list), 'strlen');
@@ -357,10 +364,10 @@ function element_node_search_config_groupings_validate($element, &$form_state) {
             '#type' => 'item_list',
             '#items' => $errors,
         );
-        form_error($element, t('The following errors were detected in the group options: !list',
+        $form_state->setErrorByName($element, t('The following errors were detected in the group options: !list',
             array('!list' => \Drupal::service('renderer')->render($item_list))));
     }
     else {
-        form_set_value($element, $values, $form_state);
+        $form_state->setErrorByName($element, $values);
     }
 }
