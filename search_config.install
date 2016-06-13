@@ -8,7 +8,8 @@
  * @return mixed
  */
 function search_config_schema() {
-  if (!db_table_exists('search_config_exclude'))  {
+$schema = [];
+  if (!\Drupal::database()->schema()->tableExists('search_config_exclude'))  {
     $schema['search_config_exclude'] = array(
     'description' => 'Provides a way to exclude specific entities from the search results. Note that this does not stop the entities from being indexed.',
     'fields' => array(
@@ -44,11 +45,12 @@ function search_config_schema() {
 /*
  * Implements hook_install()
  */
+use Drupal\Core\Session\AccountInterface;
 function search_config_install()  {
 
-  module_load_include('module','serach_config');
-  $insert = db_insert('role_permission')->fields(array('rid', 'permission'));
-  foreach (array(\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE, \Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE) as $rid) {
+  module_load_include('module','search_config');
+  $insert = \Drupal::database()->insert('role_permission')->fields(array('rid', 'permission'));
+  foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
     if (!search_config_get_roles_by_permission($rid)) {
           $insert->values(array(
             'rid' => $rid,

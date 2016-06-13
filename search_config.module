@@ -170,7 +170,7 @@ function search_config_node_search_result($node) {
  */
  function search_config_query_node_access_alter(QueryAlterableInterface $query) {
   $user = \Drupal::currentUser();
-  if ($user->uid == 1) {
+  if ($user->id() == 1) {
     return;
   }
   $search = FALSE;
