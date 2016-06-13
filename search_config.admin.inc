@@ -60,7 +60,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
         }
     }
     $settings = search_config_node_settings();
-    $role_options = arrary_map('check_plain', user_roles());
+    $role_options = array_map('check_plain', user_roles());
     $form['content_node_search_config'] = array(
         '#type' => 'fieldset',
         '#tree' => TRUE,
@@ -217,7 +217,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
   $items = array();
   $all_permissions = array(
       \Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE => $roles[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE],
-      \Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID => $roles[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID],
+      \Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE => $roles[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE],
   );
   $search_all = array();
   foreach ($permissions['search all content'] as $rid => $role) {
@@ -233,11 +233,11 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
       $permission = $search_all + $permission;
       if (count($permission)) {
           // We can reduce this down to just the two roles.
-          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID])) {
+          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE])) {
               $permission = array_intersect_key($all_permissions, $permission);
           }
 
-          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID]) && isset($permission[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE])) {
+          if (isset($permission[\Drupal\Core\Session\AccountInterface::AUTHENTICATED_ROLE]) && isset($permission[\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE])) {
               $items[] = t('!permission<br /><strong><em>Everyone</em></strong>', $t_args);
           }
           else {
