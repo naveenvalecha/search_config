@@ -5,6 +5,7 @@
  * @param $form_state
  */
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 function _search_config_form_search_admin_settings_alter($form, $form_state) {
     $string_overrides = search_config_string_overrides();
     $form['search_config_string_overrides'] = array(
@@ -284,8 +285,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
 
                   ); \Drupal::service('renderer')->render($item_list);)
                 . t('<p><strong><sup>*</sup></strong>Note: These users are allowed to search all content items.</p><p>To update these, edit the %module module <a href="!url">permissions</a>.</p>',
-        array('%module' => t('Search configuration'), '!url' => url('admin/people/permissions', array('fragment' => 'module-search_config'))))
-        ,
+        array('%module' => t('Search configuration'), '!url' => Url::fromUri(('admin/people/permissions', array('fragment' => 'module-search_config')))),
       ),
     ),
   );
