@@ -168,7 +168,8 @@ function search_config_node_search_result($node) {
 /**
  * Implements of hook_query_node_access_alter().
  */
- function search_config_query_node_access_alter(QueryAlterableInterface $query) {
+use Drupal\Core\Database\Query\AlterableInterface;
+ function search_config_query_node_access_alter(AlterableInterface $query) {
   $user = \Drupal::currentUser();
   if ($user->id() == 1) {
     return;
