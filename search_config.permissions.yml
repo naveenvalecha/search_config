@@ -14,4 +14,4 @@ search all exluded entities:
   restrict access: TRUE
 
 permission_callbacks:
-  - search_configPermissions:
+- \Drupal\search_config\searchConfigPermissions::permissions

@@ -3,13 +3,13 @@
 /*
  * Helper function for the installation of the module
  */
-
+use Drupal\Core\Database;
 function search_config_get_roles_by_permission($permission) {
-  return db_select('role_permission', 'p')
-            ->fields('p', array('rid'))
-            ->condition('permission', $permission)
-            ->execute()
-            ->fetchCol();
+  $db = \Drupal::database();
+  $data = $db->select('role_permission', 'p')
+    ->fields('p', array('rid'));
+  $data->condition('permission', $permission);
+  return $data->execute();
 }
 
 /**
@@ -73,12 +73,15 @@ function search_config_node_settings() {
 /**
  * Helper function to get an array of safe to use content type names 
  */
+use Drupal\Component\Utility\Html;
 function search_config_content_types()  {
-  return array_map('check_plain', node_type_get_names());
+  return array_map('Html::escape()', node_type_get_names());
 }
 
 /**
  * Helper function to get the settings
+ * @param null $key
+ * @return array|mixed|null
  */
 function search_config_string_overrides($key = NULL) {
   $overrides = \Drupal::config('search_config.stringoverrides')->get('search_config_string_overrides');
@@ -141,15 +144,20 @@ function search_config_node_search_result($node) {
 /**
  * Implements of hook_query_node_access_alter().
  */
-use Drupal\Core\Database\Query\AlterableInterface;
- function search_config_query_node_access_alter(AlterableInterface $query) {
+use Drupal\Core\Database\Query\SelectInterface;
+use \Drupal\Core\Database\Query\Condition;
+
+/**
+ * @param \Drupal\Core\Database\Query\SelectInterface $query
+ */
+function search_config_query_node_access_alter(SelectInterface $query) {
   $user = \Drupal::currentUser();
   if ($user->id() == 1) {
     return;
   }
   $search = FALSE;
   $node = FALSE;
-  foreach ($query->getTables() as $alias => $table) {
+  foreach ( $query->getTables() as $alias => $table) {
     if ($table['table'] == 'search_index') {
       $search = $alias;
     }
@@ -170,7 +178,7 @@ use Drupal\Core\Database\Query\AlterableInterface;
       // A core bug results in a DB error if we use the following: Ref: #1210072
       // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
       if (!empty($excluded_content_types)) {
-        $db_and = db_and();
+        $db_and = new Condition('AND');
         foreach ($excluded_content_types as $type) {
           $db_and->condition($node . '.type', $type, '!=');
         }
@@ -187,7 +195,7 @@ use Drupal\Core\Database\Query\AlterableInterface;
     if (get_class($query) == 'PagerDefault' || is_subclass_of($query, 'PagerDefault')) {
       $settings = search_config_node_settings();
       if (!empty($settings['results']['limit'])) {
-        $query->limit($settings['results']['limit']);
+        $query->range($settings['results']['limit']);
       }
     }
   }
@@ -195,6 +203,8 @@ use Drupal\Core\Database\Query\AlterableInterface;
 
 /**
  * Implements of hook_form_FORM_alter().
+ * @param $form
+ * @param $form_state
  */
 function search_config_form_search_form_alter(&$form, $form_state) {
   // Update the node search form.
@@ -215,17 +225,29 @@ function search_config_form_search_form_alter(&$form, $form_state) {
 
 /**
  * Helper function to test the users configured access rights to a field.
+ * @param $remove
+ * @param $grant
+ * @return bool
+ */
+use Drupal\user\Entity;
+
+/**
+ * @param $remove
+ * @param $grant
+ * @return bool
  */
 function search_config_get_access($remove, $grant) {
   $user = \Drupal::currentUser();
   if ($remove) {
-    return (bool) array_intersect_key($user->roles, array_filter($grant));
+    return (bool) array_intersect_key($user->getRoles(), array_filter($grant));
   }
   return TRUE;
 }
 
 /**
  * Implements hook_form_FORM_alter()
+ * @param $form
+ * @param $form_state
  */
 function search_config_form_search_admin_settings_alter(&$form, $form_state) {
   module_load_include('inc', 'search_config', 'search_config.admin');
@@ -235,6 +257,8 @@ function search_config_form_search_admin_settings_alter(&$form, $form_state) {
 
 /**
  * Additional submit handler to save the additional fields added by the form alter.
+ * @param $form
+ * @param $form_state
  */
 function search_config_search_admin_settings_alter(&$form, &$form_state) {
   \Drupal::configFactory()->getEditable('search_config.settings')->set('search_config_string_overrides', $form_state['values']['search_config_string_overrides'])->save();
@@ -254,8 +278,10 @@ function search_config_search_admin_settings_alter(&$form, &$form_state) {
 
     $node = $form['#node'];
     $default_value = 0;
+    $db = \Drupal::database();
+    $query = 'SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type';
     if (!empty($node->nid)) {
-        $default_value = (int) db_query_range('SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type', 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
+        $default_value = (int) $db->queryRange($query, 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
     }
     $element = array(
         '#type' => 'checkbox',
@@ -278,6 +304,8 @@ function search_config_search_admin_settings_alter(&$form, &$form_state) {
 
 /**
  * Implements hook_node_insert().
+ * @param \Drupal\node\NodeInterface $node
+ * @throws \Exception
  */
 function search_config_node_insert(\Drupal\node\NodeInterface $node) {
     if (!empty($node->search_config_exclude)) {
@@ -295,7 +323,8 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
  */
 function search_config_node_update(\Drupal\node\NodeInterface $node) {
     if (isset($node->search_config_exclude)) {
-        db_delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
+      $db = \Drupal::database();
+      $db->delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
         search_config_node_insert($node);
     }
 }
