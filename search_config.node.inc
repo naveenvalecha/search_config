@@ -3,6 +3,8 @@
 /**
  * Does the string overrides unconditional on what other changes are pending for
  * the form.
+ * @param $form
+ * @param $form_state
  */
 function _search_config_set_string_overrides(&$form, $form_state) {
   $labels = search_config_string_overrides('labels');
@@ -67,6 +69,9 @@ function _search_config_set_string_overrides(&$form, $form_state) {
 /**
  * This function implements the options to configure the default Drupal search
  * form, including type filter, field visibility, form visibility, etc.
+ * @param $form
+ * @param $form_state
+ * @return mixed
  */
 function _search_config_advanced_form(&$form, $form_state) {
   global $user, $search_config_node_results;
@@ -79,7 +84,7 @@ function _search_config_advanced_form(&$form, $form_state) {
   $fs_types = $settings['fields']['types'];
 
   // Return the form for super admin unchanged
-  if ($user->uid == 1 && !empty($settings['restrictions']['admin_bypass'])) {
+  if ($user->id() == 1 && !empty($settings['restrictions']['admin_bypass'])) {
     return $form;
   }
 
@@ -295,6 +300,10 @@ function _search_config_advanced_form(&$form, $form_state) {
   return $form;
 }
 
+/**
+ * @param $element
+ * @param $form_state
+ */
 function search_config_type_element_validate($element, &$form_state) {
   $types = array();
   foreach ($element['#value'] as $opt_types) {

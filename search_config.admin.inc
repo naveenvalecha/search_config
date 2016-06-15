@@ -278,16 +278,11 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           'permissions' => array(
-              '#markup' => t('This is an overview of what roles can search each content type.')
-                . ($item_list = array(
-                      '#type' => 'item_list',
-                      '#items' => $items,
-
-                  ); \Drupal::service('renderer')->render($item_list);)
+              '#markup' => t('This is an overview of what roles can search each content type.') .
+                  \Drupal::service('renderer')->render( array( '#type' => 'item_list', '#items' => $items ) ) )
                 . t('<p><strong><sup>*</sup></strong>Note: These users are allowed to search all content items.</p><p>To update these, edit the %module module <a href="!url">permissions</a>.</p>',
-        array('%module' => t('Search configuration'), '!url' => Url::fromUri(('admin/people/permissions', array('fragment' => 'module-search_config')))),
+        array('%module' => t('Search configuration'), '!url' => Url::fromUri(('admin/people/permissions'), array('fragment' => 'module-search_config')))),
       ),
-    ),
   );
 }
 
