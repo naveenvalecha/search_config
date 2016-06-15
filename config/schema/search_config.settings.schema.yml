@@ -43,6 +43,3 @@ search_config.settings:
             remove_advanced:
                 type: integer
                 label: 'Remove advanced search unconditionally'
-            search_config_string_overrides:
-                type: array
-                label: 'search_config_string_overrides'

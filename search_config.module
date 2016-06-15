@@ -108,7 +108,7 @@ function search_config_content_types()  {
  * Helper function to get the settings
  */
 function search_config_string_overrides($key = NULL) {
-  $overrides = \Drupal::config('search_config.settings')->get('search_config_string_overrides');
+  $overrides = \Drupal::config('search_config.stringoverrides')->get('search_config_string_overrides');
   $overrides += array(
     'labels' => array(
       'basic' => '',
