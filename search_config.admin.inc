@@ -174,8 +174,8 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
           'filter' => array(
               '#type' => 'checkboxes',
               '#title' => t('Hide the following content types from the %field filter:', array('%field' => $label)),
-              '#description' => t('<strong>This only limits the filter options</strong>. You must set the <a href="!url">permissions here</a> to enforce search restrictions per content types. These premissions are also used to filter the options shown to the user.',
-                  array('!url' => \Drupal\Core\Url::fromRoute('user.admin_permissions'))),
+              '#description' => t(array('!url' => \Drupal\Core\Url::fromRoute('user.admin_permissions')), '<strong>This only limits the filter options</strong>. You must set the <a href="!url">permissions here</a> to enforce search restrictions per content types. These premissions are also used to filter the options shown to the user.'
+                  ),
               '#options' => search_config_content_types(),
               '#default_value' => $settings['fields'][$key]['filter'],
           ),
