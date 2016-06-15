@@ -71,33 +71,6 @@ function search_config_node_settings() {
 }
 
 /**
- * Implements hook_permission()
- */
-function search_config_permission() {
-  $permissions = array(
-    'admin node search exlusions' => array(
-      'title' => t('Exlude nodes from search results'),
-      'description' => t('This allows users with this permission to flag content as not to be searched.'),
-      ),
-    'search all content' => array(
-      'title' => t('Search all content types'),
-      'description' => t('Allow users to search any content, overriding content type permissions.'),
-      ),
-    'search all exluded entities' => array(
-      'title' => t('Search exluded content'),
-      'description' => t('Allow users to search any content, overriding individual content item exlusion settings.'),
-      ),
-    );
-
-  foreach (search_config_content_types() as $type => $label) {
-    $permissions["search $type content"] = array(
-      'title' => t('%type_name: Search content of this type', array('%type_name' => $label)),
-      );
-  }
-  return $permissions;
-}
-
-/**
  * Helper function to get an array of safe to use content type names 
  */
 function search_config_content_types()  {
