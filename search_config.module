@@ -141,15 +141,16 @@ function search_config_node_search_result($node) {
 /**
  * Implements of hook_query_node_access_alter().
  */
-use Drupal\Core\Database\Query\AlterableInterface;
- function search_config_query_node_access_alter(AlterableInterface $query) {
+use Drupal\Core\Database\Query\SelectInterface;
+use \Drupal\Core\Database\Query\Condition;
+ function search_config_query_node_access_alter(SelectInterface $query) {
   $user = \Drupal::currentUser();
   if ($user->id() == 1) {
     return;
   }
   $search = FALSE;
   $node = FALSE;
-  foreach ($query->getTables() as $alias => $table) {
+  foreach ( $query->getTables() as $alias => $table) {
     if ($table['table'] == 'search_index') {
       $search = $alias;
     }
@@ -170,7 +171,7 @@ use Drupal\Core\Database\Query\AlterableInterface;
       // A core bug results in a DB error if we use the following: Ref: #1210072
       // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
       if (!empty($excluded_content_types)) {
-        $db_and = db_and();
+        $db_and = new Condition('AND');
         foreach ($excluded_content_types as $type) {
           $db_and->condition($node . '.type', $type, '!=');
         }
@@ -187,7 +188,7 @@ use Drupal\Core\Database\Query\AlterableInterface;
     if (get_class($query) == 'PagerDefault' || is_subclass_of($query, 'PagerDefault')) {
       $settings = search_config_node_settings();
       if (!empty($settings['results']['limit'])) {
-        $query->limit($settings['results']['limit']);
+        $query->range($settings['results']['limit']);
       }
     }
   }
