@@ -11,7 +11,4 @@ class searchConfigPermissions {
         }
         return $permissions;
     }
-    public function search_config_content_types()  {
-        return array_map('check_plain', node_type_get_names());
-    }
 }

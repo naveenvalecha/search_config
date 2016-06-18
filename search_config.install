@@ -50,7 +50,7 @@ function search_config_install()  {
 
   module_load_include('module','search_config');
   foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
-      user_role_grant_permissions($rid, array('search all content'));
+    $rid->grantPermission('search all content');
         }
 
       $settings = search_config_node_settings();

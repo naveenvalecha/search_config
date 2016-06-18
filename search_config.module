@@ -3,13 +3,11 @@
 /*
  * Helper function for the installation of the module
  */
-use Drupal\Core\Database;
+use Drupal\Core\Session\AccountInterface;
 function search_config_get_roles_by_permission($permission) {
-  $db = \Drupal::database();
-  $data = $db->select('role_permission', 'p')
-    ->fields('p', array('rid'));
-  $data->condition('permission', $permission);
-  return $data->execute();
+  foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
+    return $rid->hasPermission($permission);
+  }
 }
 
 /**
@@ -73,9 +71,9 @@ function search_config_node_settings() {
 /**
  * Helper function to get an array of safe to use content type names 
  */
-use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility;
 function search_config_content_types()  {
-  return array_map('Html::escape()', node_type_get_names());
+  return array_map('Drupal\Component\Utility\Html::escape', node_type_get_names());
 }
 
 /**

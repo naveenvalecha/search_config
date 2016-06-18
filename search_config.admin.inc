@@ -67,7 +67,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
         }
     }
     $settings = search_config_node_settings();
-    $role_options = array_map('check_plain', user_roles());
+    $role_options = array_map('Html::escape', user_roles());
     $form['content_node_search_config'] = array(
         '#type' => 'fieldset',
         '#tree' => TRUE,
