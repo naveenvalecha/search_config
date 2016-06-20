@@ -3,13 +3,11 @@
 /*
  * Helper function for the installation of the module
  */
-
+use Drupal\Core\Session\AccountInterface;
 function search_config_get_roles_by_permission($permission) {
-  return db_select('role_permission', 'p')
-            ->fields('p', array('rid'))
-            ->condition('permission', $permission)
-            ->execute()
-            ->fetchCol();
+    foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
+                return $rid->hasPermission($permission);
+   }
 }
 
 /**
@@ -73,8 +71,9 @@ function search_config_node_settings() {
 /**
  * Helper function to get an array of safe to use content type names 
  */
+use Drupal\Component\Utility;
 function search_config_content_types()  {
-  return array_map('check_plain', node_type_get_names());
+  return array_map('Html::escape', node_type_get_names());
 }
 
 /**
@@ -220,7 +219,7 @@ function search_config_form_search_form_alter(&$form, $form_state) {
 function search_config_get_access($remove, $grant) {
   $user = \Drupal::currentUser();
   if ($remove) {
-    return (bool) array_intersect_key($user->roles, array_filter($grant));
+    return (bool) array_intersect_key($user->getRoles(), array_filter($grant));
   }
   return TRUE;
 }
@@ -255,8 +254,10 @@ function search_config_search_admin_settings_alter(&$form, &$form_state) {
 
     $node = $form['#node'];
     $default_value = 0;
+    $db = \Drupal::database();
+    $query = 'SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type';
     if (!empty($node->nid)) {
-        $default_value = (int) db_query_range('SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type', 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
+        $default_value = (int) $db->queryRange($query, 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
     }
     $element = array(
         '#type' => 'checkbox',
@@ -296,7 +297,7 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
  */
 function search_config_node_update(\Drupal\node\NodeInterface $node) {
     if (isset($node->search_config_exclude)) {
-        db_delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
+        $db->delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
         search_config_node_insert($node);
     }
 }

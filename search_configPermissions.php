@@ -1,6 +1,6 @@
 <?php
-
-class search_configPermissions {
+namespace  Drupal\search_config;
+class searchConfigPermissions {
     public function permissions() {
         $permissions = [];
         foreach (search_config_content_types() as $type => $label) {

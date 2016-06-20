@@ -62,7 +62,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
         }
     }
     $settings = search_config_node_settings();
-    $role_options = array_map('check_plain', user_roles());
+    $role_options = array_map('Html::escape', user_roles());
     $form['content_node_search_config'] = array(
         '#type' => 'fieldset',
         '#tree' => TRUE,
@@ -209,7 +209,10 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
   );
     $permissions = array();
   $roles = array_map('check_plain', user_roles());
-  $search_config_permission = search_config_permission();
+    $search_config_permission = array_filter(\Drupal::service('search_config.permissions')->getPermissions(), function($v) {
+       return $v['provider'] == 'search_config';
+    }
+    );
   foreach ($search_config_permission as $permission => $info) {
       $permissions[$permission] = array();
       foreach (search_config_get_roles_by_permission($permission) as $rid) {
@@ -291,6 +294,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
  *
  * User friendly display of key|value listings element validation.
  */
+use  \Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -312,7 +316,7 @@ function element_node_search_config_groupings_validate($element, FormStateInterf
             $key = trim($matches[1]);
             $value = trim($matches[2]);
             if (empty($key) || empty($value)) {
-                $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($matches[0]);
+                $empty_pairs []= Html::escape($matches[0]);
             }
             else {
                 $found_types = array();
@@ -341,7 +345,7 @@ function element_node_search_config_groupings_validate($element, FormStateInterf
             }
         }
         else {
-            $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($text);
+            $empty_pairs []= Html::escape($text);
         }
     }
 

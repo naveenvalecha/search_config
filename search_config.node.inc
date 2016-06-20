@@ -304,14 +304,15 @@ function _search_config_advanced_form(&$form, $form_state) {
  * @param $element
  * @param $form_state
  */
-function search_config_type_element_validate($element, &$form_state) {
+use Drupal\Core\Form\FormStateInterface;
+function search_config_type_element_validate($element, FormStateInterface &$form_state) {
   $types = array();
   foreach ($element['#value'] as $opt_types) {
     foreach (explode(',', $opt_types) as $type) {
       $types[$type] = $type;
     }
   }
-    $form_state->setValueForElement($element, $types, $form_state);
+    $form_state->setValueForElement($element, $types);
 }
 
 /**

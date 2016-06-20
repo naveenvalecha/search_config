@@ -51,12 +51,7 @@ function search_config_install()  {
   module_load_include('module','search_config');
   $insert = \Drupal::database()->insert('role_permission')->fields(array('rid', 'permission'));
   foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
-    if (!search_config_get_roles_by_permission($rid)) {
-          $insert->values(array(
-            'rid' => $rid,
-            'permission' => 'search all content',
-          ));
-        }
+    $rid->grantPermission('search all content');
       }
       $insert->execute();
       $settings = search_config_node_settings();
