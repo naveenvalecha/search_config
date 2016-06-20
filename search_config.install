@@ -53,7 +53,6 @@ function search_config_install()  {
   foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
     $rid->grantPermission('search all content');
       }
-      $insert->execute();
       \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
 
       // Remove the old 6.x variables
