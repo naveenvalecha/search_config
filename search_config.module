@@ -73,7 +73,7 @@ function search_config_node_settings() {
  */
 use Drupal\Component\Utility;
 function search_config_content_types()  {
-  return array_map('Drupal\Component\Utility\Html::escape', node_type_get_names());
+  return array_map('Html::escape', node_type_get_names());
 }
 
 /**
@@ -134,9 +134,9 @@ function search_config_theme()  {
  * The only reason for this hook is to record if there are any active
  * search results found.
  */
-function search_config_node_search_result($node) {
+function search_config_node_search_result(NodeInterface $node) {
   global $search_config_node_results;
-  $search_config_node_results [$node->nid] = $node->nid;
+  $search_config_node_results [$node->id()] = $node->id();
 }
 
 /**
@@ -165,30 +165,32 @@ function search_config_query_node_access_alter(SelectInterface $query) {
   }
 
   if ($node && $search) {
-    if (!\Drupal::currentUser()->hasPermission('search all content')) {
-      $excluded_content_types = array();
-      foreach (search_config_content_types() as $type => $label) {
-        if (!\Drupal::currentUser()->hasPermission("search $type content")) {
-          $excluded_content_types[] = $type;
-        }
-      }
+      if ($user->id() != 1) {
+          if (!\Drupal::currentUser()->hasPermission('search all content')) {
+              $excluded_content_types = array();
+              foreach (search_config_content_types() as $type => $label) {
+                  if (!\Drupal::currentUser()->hasPermission("search $type content")) {
+                      $excluded_content_types[] = $type;
+                  }
+              }
 
-      // A core bug results in a DB error if we use the following: Ref: #1210072
-      // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
-      if (!empty($excluded_content_types)) {
-        $db_and = new Condition('AND');
-        foreach ($excluded_content_types as $type) {
-          $db_and->condition($node . '.type', $type, '!=');
-        }
-        $query->condition($db_and);
-      }
-    }
+              // A core bug results in a DB error if we use the following: Ref: #1210072
+              // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
+              if (!empty($excluded_content_types)) {
+                  $db_and = new Condition('AND');
+                  foreach ($excluded_content_types as $type) {
+                      $db_and->condition($node . '.type', $type, '!=');
+                  }
+                  $query->condition($db_and);
+              }
+          }
 
-    if (!\Drupal::currentUser()->hasPermission('search all excluded entities')) {
-      // Join into the {} table to see if it is excluded.
-      $query->leftJoin('search_config_exclude', 'sc', $node .'.nid = sc.entity_id AND sc.entity_type = :type', array(':type' => 'node'));
-      $query->isNull('sc.entity_id');
-    }
+          if (!\Drupal::currentUser()->hasPermission('search all excluded entities')) {
+              // Join into the {} table to see if it is excluded.
+              $query->leftJoin('search_config_exclude', 'sc', $node . '.nid = sc.entity_id AND sc.entity_type = :type', array(':type' => 'node'));
+              $query->isNull('sc.entity_id');
+          }
+      }
 
     if (get_class($query) == 'PagerDefault' || is_subclass_of($query, 'PagerDefault')) {
       $settings = search_config_node_settings();
@@ -305,14 +307,15 @@ function search_config_search_admin_settings_alter(&$form, &$form_state) {
  * @param \Drupal\node\NodeInterface $node
  * @throws \Exception
  */
-function search_config_node_insert(\Drupal\node\NodeInterface $node) {
+use Drupal\node\NodeInterface;
+function search_config_node_insert(NodeInterface $node) {
     if (!empty($node->search_config_exclude)) {
         $record = array(
             'entity_type' => 'node',
             'entity_id' => $node->id(),
             'exclude' => 1,
         );
-        \Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
+        Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
     }
 }
 
@@ -321,7 +324,7 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
  */
 function search_config_node_update(\Drupal\node\NodeInterface $node) {
     if (isset($node->search_config_exclude)) {
-      $db = \Drupal::database();
+      $db = Drupal::database();
       $db->delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
         search_config_node_insert($node);
     }

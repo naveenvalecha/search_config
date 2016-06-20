@@ -84,7 +84,7 @@ function _search_config_advanced_form(&$form, $form_state) {
   $fs_types = $settings['fields']['types'];
 
   // Return the form for super admin unchanged
-  $user = \Drupal::currentUser();
+  $user = Drupal::currentUser();
   if ($user->id() == 1 && !empty($settings['restrictions']['admin_bypass'])) {
     return $form;
   }
