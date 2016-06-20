@@ -73,7 +73,7 @@ function search_config_node_settings() {
  */
 use Drupal\Component\Utility;
 function search_config_content_types()  {
-  return array_map('Html::escape', node_type_get_names());
+  return array_map('Drupal\Component\Utility\Html::escape', node_type_get_names());
 }
 
 /**
