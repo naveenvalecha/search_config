@@ -46,14 +46,15 @@ $schema = [];
  * Implements hook_install()
  */
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Entity;
 function search_config_install()  {
 
   module_load_include('module','search_config');
-  $insert = Drupal::database()->insert('role_permission')->fields(array('rid', 'permission'));
   foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
     $rid->grantPermission('search all content');
       }
-      \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
+    $settings = search_config_node_settings();
+    \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
 
       // Remove the old 6.x variables
       \Drupal::config('search_config.settings')->clear('search_config_disable_or')->save();

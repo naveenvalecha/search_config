@@ -312,7 +312,7 @@ function search_config_type_element_validate($element, FormStateInterface &$form
       $types[$type] = $type;
     }
   }
-    $form_state->setValueForElement($element, $types);
+    $form_state->setValueForElement($element, $types);  
 }
 
 /**
