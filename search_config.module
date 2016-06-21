@@ -3,6 +3,7 @@
 /*
  * Helper function for the installation of the module
  */
+namespace  Drupal\search_config;
 use Drupal\Core\Session\AccountInterface;
 function search_config_get_roles_by_permission($permission) {
     foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
@@ -69,7 +70,7 @@ function search_config_node_settings() {
 }
 
 /**
- * Helper function to get an array of safe to use content type names 
+ * Helper function to get an array of safe to use content type names
  */
 use Drupal\Component\Utility;
 function search_config_content_types()  {
@@ -291,7 +292,7 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
             'entity_id' => $node->id(),
             'exclude' => 1,
         );
-        Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
+        \Drupal::database()->insert('search_config_exclude')->fields($record)->execute();
     }
 }
 
@@ -300,7 +301,7 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
  */
 function search_config_node_update(\Drupal\node\NodeInterface $node) {
     if (isset($node->search_config_exclude)) {
-        $db = Drupal::database();
+        $db = \Drupal::database();
         $db->delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
         search_config_node_insert($node);
     }

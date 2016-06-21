@@ -1,4 +1,11 @@
 <?php
+
+/*
+ * @file
+ *
+ * contains \Drupal\search_config\searchConfigPermissions
+ */
+
 namespace  Drupal\search_config;
 class searchConfigPermissions {
     public function permissions() {
