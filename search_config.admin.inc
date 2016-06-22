@@ -62,7 +62,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
         }
     }
     $settings = search_config_node_settings();
-    $role_options = array_map('check_plain', user_roles());
+    $role_options = array_map('Html::escape', user_roles());
     $form['content_node_search_config'] = array(
         '#type' => 'fieldset',
         '#tree' => TRUE,
@@ -174,7 +174,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
           'filter' => array(
               '#type' => 'checkboxes',
               '#title' => t('Hide the following content types from the %field filter:', array('%field' => $label)),
-              '#description' => t(array('!url' => \Drupal\Core\Url::fromRoute('user.admin_permissions')), '<strong>This only limits the filter options</strong>. You must set the <a href="!url">permissions here</a> to enforce search restrictions per content types. These premissions are also used to filter the options shown to the user.'
+              '#description' => t(array('!url' => Url::fromRoute('user.admin_permissions')), '<strong>This only limits the filter options</strong>. You must set the <a href="!url">permissions here</a> to enforce search restrictions per content types. These premissions are also used to filter the options shown to the user.'
                   ),
               '#options' => search_config_content_types(),
               '#default_value' => $settings['fields'][$key]['filter'],
@@ -209,7 +209,10 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
   );
     $permissions = array();
   $roles = array_map('check_plain', user_roles());
-  $search_config_permission = search_config_permission();
+    $search_config_permission = array_filter(\Drupal::service('search_config.permissions')->getPermissions(), function($v) {
+       return $v['provider'] == 'search_config';
+    }
+    );
   foreach ($search_config_permission as $permission => $info) {
       $permissions[$permission] = array();
       foreach (search_config_get_roles_by_permission($permission) as $rid) {
@@ -281,7 +284,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
               '#markup' => t('This is an overview of what roles can search each content type.') .
                   \Drupal::service('renderer')->render( array( '#type' => 'item_list', '#items' => $items ) ) )
                 . t('<p><strong><sup>*</sup></strong>Note: These users are allowed to search all content items.</p><p>To update these, edit the %module module <a href="!url">permissions</a>.</p>',
-        array('%module' => t('Search configuration'), '!url' => Url::fromUri(('admin/people/permissions'), array('fragment' => 'module-search_config')))),
+        array('%module' => t('Search configuration'), '!url' => Url::fromRoute(('admin/people/permissions'), array('fragment' => 'module-search_config')))),
       ),
   );
 }
@@ -291,6 +294,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
  *
  * User friendly display of key|value listings element validation.
  */
+use  \Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -312,7 +316,7 @@ function element_node_search_config_groupings_validate($element, FormStateInterf
             $key = trim($matches[1]);
             $value = trim($matches[2]);
             if (empty($key) || empty($value)) {
-                $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($matches[0]);
+                $empty_pairs []= Html::escape($matches[0]);
             }
             else {
                 $found_types = array();
@@ -341,7 +345,7 @@ function element_node_search_config_groupings_validate($element, FormStateInterf
             }
         }
         else {
-            $empty_pairs []= \Drupal\Component\Utility\SafeMarkup::checkPlain($text);
+            $empty_pairs []= Html::escape($text);
         }
     }
 

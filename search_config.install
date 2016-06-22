@@ -9,7 +9,7 @@
  */
 function search_config_schema() {
 $schema = [];
-  if (!\Drupal::database()->schema()->tableExists('search_config_exclude'))  {
+  if (!Drupal::database()->schema()->tableExists('search_config_exclude'))  {
     $schema['search_config_exclude'] = array(
     'description' => 'Provides a way to exclude specific entities from the search results. Note that this does not stop the entities from being indexed.',
     'fields' => array(
@@ -46,21 +46,15 @@ $schema = [];
  * Implements hook_install()
  */
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Entity;
 function search_config_install()  {
 
   module_load_include('module','search_config');
-  $insert = \Drupal::database()->insert('role_permission')->fields(array('rid', 'permission'));
   foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
-    if (!search_config_get_roles_by_permission($rid)) {
-          $insert->values(array(
-            'rid' => $rid,
-            'permission' => 'search all content',
-          ));
-        }
+    $rid->grantPermission('search all content');
       }
-      $insert->execute();
-      $settings = search_config_node_settings();
-      \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
+    $settings = search_config_node_settings();
+    \Drupal::service('config.factory')->getEditable('search_config.settings')->save();
 
       // Remove the old 6.x variables
       \Drupal::config('search_config.settings')->clear('search_config_disable_or')->save();

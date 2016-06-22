@@ -3,13 +3,12 @@
 /*
  * Helper function for the installation of the module
  */
-
+namespace  Drupal\search_config;
+use Drupal\Core\Session\AccountInterface;
 function search_config_get_roles_by_permission($permission) {
-  return db_select('role_permission', 'p')
-            ->fields('p', array('rid'))
-            ->condition('permission', $permission)
-            ->execute()
-            ->fetchCol();
+    foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
+                return $rid->hasPermission($permission);
+   }
 }
 
 /**
@@ -71,10 +70,11 @@ function search_config_node_settings() {
 }
 
 /**
- * Helper function to get an array of safe to use content type names 
+ * Helper function to get an array of safe to use content type names
  */
+use Drupal\Component\Utility;
 function search_config_content_types()  {
-  return array_map('check_plain', node_type_get_names());
+  return array_map('Drupal\Component\Utility\Html::escape', node_type_get_names());
 }
 
 /**
@@ -133,9 +133,10 @@ function search_config_theme()  {
  * The only reason for this hook is to record if there are any active
  * search results found.
  */
-function search_config_node_search_result($node) {
+use Drupal\node\NodeInterface;
+function search_config_node_search_result(NodeInterface $node) {
   global $search_config_node_results;
-  $search_config_node_results [$node->nid] = $node->nid;
+  $search_config_node_results [$node->id()] = $node->id();
 }
 
 /**
@@ -160,30 +161,32 @@ use \Drupal\Core\Database\Query\Condition;
   }
 
   if ($node && $search) {
-    if (!\Drupal::currentUser()->hasPermission('search all content')) {
-      $excluded_content_types = array();
-      foreach (search_config_content_types() as $type => $label) {
-        if (!\Drupal::currentUser()->hasPermission("search $type content")) {
-          $excluded_content_types[] = $type;
-        }
-      }
+      if ($user->id() != 1) {
+          if (!\Drupal::currentUser()->hasPermission('search all content')) {
+              $excluded_content_types = array();
+              foreach (search_config_content_types() as $type => $label) {
+                  if (!\Drupal::currentUser()->hasPermission("search $type content")) {
+                      $excluded_content_types[] = $type;
+                  }
+              }
 
-      // A core bug results in a DB error if we use the following: Ref: #1210072
-      // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
-      if (!empty($excluded_content_types)) {
-        $db_and = new Condition('AND');
-        foreach ($excluded_content_types as $type) {
-          $db_and->condition($node . '.type', $type, '!=');
-        }
-        $query->condition($db_and);
-      }
-    }
+              // A core bug results in a DB error if we use the following: Ref: #1210072
+              // $query->condition($node . '.type', array($excluded_content_types), 'NOT IN');
+              if (!empty($excluded_content_types)) {
+                  $db_and = new Condition('AND');
+                  foreach ($excluded_content_types as $type) {
+                      $db_and->condition($node . '.type', $type, '!=');
+                  }
+                  $query->condition($db_and);
+              }
+          }
 
-    if (!\Drupal::currentUser()->hasPermission('search all excluded entities')) {
-      // Join into the {} table to see if it is excluded.
-      $query->leftJoin('search_config_exclude', 'sc', $node .'.nid = sc.entity_id AND sc.entity_type = :type', array(':type' => 'node'));
-      $query->isNull('sc.entity_id');
-    }
+          if (!\Drupal::currentUser()->hasPermission('search all excluded entities')) {
+              // Join into the {} table to see if it is excluded.
+              $query->leftJoin('search_config_exclude', 'sc', $node . '.nid = sc.entity_id AND sc.entity_type = :type', array(':type' => 'node'));
+              $query->isNull('sc.entity_id');
+          }
+      }
 
     if (get_class($query) == 'PagerDefault' || is_subclass_of($query, 'PagerDefault')) {
       $settings = search_config_node_settings();
@@ -220,7 +223,7 @@ function search_config_form_search_form_alter(&$form, $form_state) {
 function search_config_get_access($remove, $grant) {
   $user = \Drupal::currentUser();
   if ($remove) {
-    return (bool) array_intersect_key($user->roles, array_filter($grant));
+    return (bool) array_intersect_key($user->getRoles(), array_filter($grant));
   }
   return TRUE;
 }
@@ -255,8 +258,10 @@ function search_config_search_admin_settings_alter(&$form, &$form_state) {
 
     $node = $form['#node'];
     $default_value = 0;
+    $db = \Drupal::database();
+    $query = 'SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type';
     if (!empty($node->nid)) {
-        $default_value = (int) db_query_range('SELECT 1 FROM {search_config_exclude} WHERE entity_id = :id AND entity_type = :type', 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
+        $default_value = (int) $db->queryRange($query, 0, 1, array(':id' => $node->nid, ':type' => 'node'))->fetchField();
     }
     $element = array(
         '#type' => 'checkbox',
@@ -296,7 +301,8 @@ function search_config_node_insert(\Drupal\node\NodeInterface $node) {
  */
 function search_config_node_update(\Drupal\node\NodeInterface $node) {
     if (isset($node->search_config_exclude)) {
-        db_delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
+        $db = \Drupal::database();
+        $db->delete('search_config_exclude')->condition('entity_id', $node->id())->condition('entity_type', 'node')->execute();
         search_config_node_insert($node);
     }
 }
