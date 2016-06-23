@@ -7,7 +7,7 @@
  * @param $form_state
  */
 function _search_config_set_string_overrides(&$form, $form_state) {
-  $labels = search_config_string_overrides('labels');
+  $labels = Drupal\module\search_config_string_overrides('labels');
 
   // The two submit buttons.
   if (isset($form['basic']['submit']) && !empty($labels['basic_submit'])) {
@@ -18,7 +18,7 @@ function _search_config_set_string_overrides(&$form, $form_state) {
   }
 
   // Other form elements. Map into an array to iterate over each element.
-  $title_display = search_config_string_overrides('title_display');
+  $title_display = Drupal\module\search_config_string_overrides('title_display');
   $label_elements = array();
   if (isset($form['basic'])) {
     $label_elements['basic'] = &$form['basic']['keys'];
@@ -77,7 +77,7 @@ function _search_config_advanced_form(&$form, $form_state) {
   global $user, $search_config_node_results;
 
   // Settings
-  $settings = search_config_node_settings();
+  $settings = Drupal\module\search_config_node_settings();
   $fs_phrase = $settings['fields']['containing_phrase'];
   $fs_any = $settings['fields']['containing_any'];
   $fs_none = $settings['fields']['containing_none'];
@@ -94,7 +94,7 @@ function _search_config_advanced_form(&$form, $form_state) {
   $ftype = &$form['advanced']['type'];
   if (isset($form['advanced']['language'])) {
     $fs_language = $settings['fields']['language'];
-    $form['advanced']['language']['#access'] = search_config_get_access($fs_language['remove'], $fs_language['roles']);
+    $form['advanced']['language']['#access'] = Drupal\module\search_config_get_access($fs_language['remove'], $fs_language['roles']);
   }
 
   // Change the form fieldset.
@@ -125,10 +125,10 @@ function _search_config_advanced_form(&$form, $form_state) {
   if ($settings['forms']['toggle_forms']) {
     $form['basic']['#access'] = FALSE;
   }
-  $fkeywords['phrase']['#access'] = search_config_get_access($fs_phrase['remove'], $fs_phrase['roles']);
-  $fkeywords['or']['#access'] = search_config_get_access($fs_any['remove'], $fs_any['roles']);
-  $fkeywords['negative']['#access'] = search_config_get_access($fs_none['remove'], $fs_none['roles']);
-  $ftype['#access'] = search_config_get_access($fs_types['remove'], $fs_types['roles']);
+  $fkeywords['phrase']['#access'] = Drupal\module\search_config_get_access($fs_phrase['remove'], $fs_phrase['roles']);
+  $fkeywords['or']['#access'] = Drupal\module\search_config_get_access($fs_any['remove'], $fs_any['roles']);
+  $fkeywords['negative']['#access'] = Drupal\module\search_config_get_access($fs_none['remove'], $fs_none['roles']);
+  $ftype['#access'] = Drupal\module\search_config_get_access($fs_types['remove'], $fs_types['roles']);
 
   switch ($settings['forms']['remove_containing_wrapper']) {
     case 'remove':
@@ -231,7 +231,7 @@ function _search_config_advanced_form(&$form, $form_state) {
     $base_types = array_filter($fs_types['filter']);
     $access = \Drupal::currentUser()->hasPermission('search all content');
     $allowed_types = array();
-    foreach (search_config_content_types() as $key => $type) {
+    foreach (Drupal\module\search_config_content_types() as $key => $type) {
       if (in_array($key, $base_types) || !($access || \Drupal::currentUser()->hasPermission("search $key content"))) {
         unset($ftype['#options'][$key]);
       }
