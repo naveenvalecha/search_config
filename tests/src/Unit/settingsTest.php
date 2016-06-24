@@ -3,11 +3,11 @@
 /**
  * Testing the settings: search_config_node_settings()
  */
-use \Drupal\module;
+use \Drupal\search_config;
 class settingsTest extends PHPUnit_Framework_TestCase {
     public $defaultSettings = [];
     public function testSettings() {
-        $this->defaultSettings = Drupal\module\search_config_node_settings();
+        $this->defaultSettings = Drupal\search_config\search_config_node_settings();
         $arr= [0,0,0,'default','default',[],[],[],[],[],[],1,0,10];
         $this->assertTrue(arraysAreSimilar($arr, $this->defaultSettings));
         function arraysAreSimilar($a, $b) {

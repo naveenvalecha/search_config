@@ -4,10 +4,11 @@
  * @param $form
  * @param $form_state
  */
+use Drupal\search_config;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 function _search_config_form_search_admin_settings_alter($form, $form_state) {
-    $string_overrides = Drupal\module\search_config_string_overrides();
+    $string_overrides = Drupal\search_config\search_config_string_overrides();
     $form['search_config_string_overrides'] = array(
         '#type' => 'fieldset',
         '#theme' => 'search_config_admin_label_form',
@@ -61,7 +62,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
             );
         }
     }
-    $settings = Drupal\module\search_config_node_settings();
+    $settings = Drupal\search_config\search_config_node_settings();
     $role_options = array_map('Html::escape', user_roles());
     $form['content_node_search_config'] = array(
         '#type' => 'fieldset',
@@ -156,7 +157,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
               $groupings [] = $gtypes . '|' . $glabels;
           }
           $groupings_type_help_items = array();
-          foreach (Drupal\module\search_config_content_types() as $gtype => $glabel) {
+          foreach (Drupal\search_config\search_config_content_types() as $gtype => $glabel) {
               $groupings_type_help_items[] = t('!type|%label', array('!type' => $gtype, '%label' => $glabel));
           }
           $groupings_type_help_items[] = t('&lt;other-types&gt;|Search for all other content types not used already in a grouping that is allowed by the type filter.');
@@ -176,7 +177,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
               '#title' => t('Hide the following content types from the %field filter:', array('%field' => $label)),
               '#description' => t(array('!url' => Url::fromRoute('user.admin_permissions')), '<strong>This only limits the filter options</strong>. You must set the <a href="!url">permissions here</a> to enforce search restrictions per content types. These premissions are also used to filter the options shown to the user.'
                   ),
-              '#options' => Drupal\module\search_config_content_types(),
+              '#options' => Drupal\search_config\search_config_content_types(),
               '#default_value' => $settings['fields'][$key]['filter'],
           ),
           'groupings' => array(
@@ -215,7 +216,7 @@ function _search_config_form_search_admin_settings_alter($form, $form_state) {
     );
   foreach ($search_config_permission as $permission => $info) {
       $permissions[$permission] = array();
-      foreach (Drupal\module\search_config_get_roles_by_permission($permission) as $rid) {
+      foreach (Drupal\search_config\search_config_get_roles_by_permission($permission) as $rid) {
           $permissions[$permission][$rid] = $roles[$rid];
       }
   }
@@ -307,7 +308,7 @@ function element_node_search_config_groupings_validate($element, FormStateInterf
     $list = array_filter(array_map('trim', $list), 'strlen');
 
     $values = array();
-    $content_types = Drupal\module\search_config_content_types();
+    $content_types = Drupal\search_config\search_config_content_types();
     $found_types = array();
     $errors = array();
     $empty_pairs = array();
