@@ -3,7 +3,6 @@
 /*
  * Helper function for the installation of the module
  */
-namespace  Drupal\search_config;
 use Drupal\Core\Session\AccountInterface;
 function search_config_get_roles_by_permission($permission) {
     foreach (array(AccountInterface::ANONYMOUS_ROLE, AccountInterface::AUTHENTICATED_ROLE) as $rid) {
