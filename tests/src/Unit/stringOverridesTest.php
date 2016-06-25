@@ -3,11 +3,10 @@
 /**
  * Testing the string overrides: search_config_string_overrides()
  */
-use \Drupal\search_config;
 class stringOverridesTest extends PHPUnit_Framework_TestCase {
     public $overrides = [];
     public function testStringOverrides() {
-        $this->overrides = Drupal\search_config\search_config_string_overrides();
+        $this->overrides = search_config_string_overrides();
         $arr= [[],[],[],[],[],[],[],[],[],[],[],'default','default','default','default','default','default',[],[],];
         $this->assertTrue(arraysAreSimilar($arr, $this->overrides));
         function arraysAreSimilar($a, $b) {
