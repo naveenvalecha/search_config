@@ -3,7 +3,8 @@
 /**
  * Testing the string overrides: search_config_string_overrides()
  */
-class stringOverridesTest extends PHPUnit_Framework_TestCase {
+use \Drupal\Tests;
+class stringOverridesTest extends \PHPUnit_Framework_TestCase {
     public $overrides = [];
     public function testStringOverrides() {
         $this->overrides = search_config_string_overrides();
